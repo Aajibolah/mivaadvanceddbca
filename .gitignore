@@ -27,3 +27,7 @@ docs/viva-prep.md
 
 # Internal working brief (not part of the submission)
 plan/
+
+# Portfolio 5 local test instances and backup files
+portfolio-5-distributed-cloud/.cluster/
+portfolio-5-distributed-cloud/backup/out/
