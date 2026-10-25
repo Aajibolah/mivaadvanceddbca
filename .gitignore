@@ -1,0 +1,29 @@
+# Secrets and local configuration
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Docker volumes and local data
+pgdata/
+mongodata/
+*.log.tmp
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated seed data (regenerate with the seed script)
+*.csv.gz
+
+# Private study notes (brief section 10: viva prep may stay out of the repo)
+docs/viva-prep.md
+
+# Internal working brief (not part of the submission)
+plan/
