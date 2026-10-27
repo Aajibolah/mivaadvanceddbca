@@ -1,0 +1,74 @@
+-- =============================================================================
+-- Scenario 3: lost update / double spend on one wallet, and three fixes.
+-- Open TWO psql windows (Session A and Session B), both connected to the copay
+-- database. Run the numbered steps in the order shown (the order matters, not
+-- the speed). Isolation level in both sessions: READ COMMITTED (the default).
+-- =============================================================================
+
+-- ---------- Setup (either session, once) ----------
+-- SELECT p3_reset_wallet('alice', 1000);
+-- SELECT p3_wallet('alice') AS w \gset
+
+-- =============================================================================
+-- PART 1: THE PROBLEM. An application reads the balance, decides in code, and
+-- writes back an absolute value. (This is what a developer does when they bypass
+-- the ledger and treat wallets.balance as an ordinary column.)
+-- =============================================================================
+-- 1. A: BEGIN;
+-- 2. A: SELECT balance FROM wallets WHERE id = :w;                  -- sees 1000.00
+-- 3. B: BEGIN;
+-- 4. B: SELECT balance FROM wallets WHERE id = :w;                  -- also sees 1000.00
+-- 5. B: UPDATE wallets SET balance = 1000 - 700 WHERE id = :w;      -- app computed 300
+-- 6. B: COMMIT;
+-- 7. A: UPDATE wallets SET balance = 1000 - 700 WHERE id = :w;      -- A still believes 1000. Waited for B, now overwrites
+-- 8. A: COMMIT;
+-- 9. Either: SELECT balance FROM wallets WHERE id = :w;             -- 300.00: two withdrawals of 700 but only 700 left the wallet
+--    SELECT * FROM wallet_reconciliation WHERE wallet_id = :w;      -- difference <> 0: the reconciliation query catches the corruption
+-- Fix the data for the next part:  SELECT p3_reset_wallet('alice', 1000);
+
+-- =============================================================================
+-- PART 2: THE DESIGN'S OWN DEFENCE. The same stale check, but the withdrawal goes
+-- through the ledger. The trigger applies a DELTA (balance = balance + amount),
+-- not an absolute value, and the CHECK constraint refuses a negative balance.
+-- =============================================================================
+-- 1. A: BEGIN;
+-- 2. A: SELECT balance FROM wallets WHERE id = :w;                  -- 1000.00, "enough"
+-- 3. B: BEGIN;
+-- 4. B: SELECT balance FROM wallets WHERE id = :w;                  -- 1000.00, "enough"
+-- 5. A: SELECT post_pair('WALLET_WITHDRAWAL', :w, system_wallet('EXTERNAL'), 700, 'A');
+-- 6. B: SELECT post_pair('WALLET_WITHDRAWAL', :w, system_wallet('EXTERNAL'), 700, 'B');   -- BLOCKS (row lock held by A)
+-- 7. A: COMMIT;                                                     -- B now fails:
+--       ERROR: new row for relation "wallets" violates check constraint "wallets_balance_non_negative"
+-- 8. B: ROLLBACK;
+-- Result: no overdraft, but B got a raw constraint error and its earlier "enough funds" check was wrong.
+
+-- =============================================================================
+-- FIX 1: PESSIMISTIC LOCKING. Lock the row first, then check, then write.
+-- =============================================================================
+-- Setup: SELECT p3_reset_wallet('alice', 1000);
+-- 1. A: BEGIN;
+-- 2. A: SELECT balance FROM wallets WHERE id = :w FOR UPDATE;       -- 1000.00, lock taken
+-- 3. B: BEGIN;
+-- 4. B: SELECT balance FROM wallets WHERE id = :w FOR UPDATE;       -- BLOCKS
+-- 5. A: SELECT post_pair('WALLET_WITHDRAWAL', :w, system_wallet('EXTERNAL'), 700, 'A');
+-- 6. A: COMMIT;                                                     -- B unblocks and reads 300.00
+-- 7. B: (application sees 300 < 700 and refuses cleanly)  ROLLBACK;
+-- The packaged version is the function  withdraw_safe(wallet, amount):
+--       SELECT withdraw_safe(:w, 700);   -- first caller succeeds
+--       SELECT withdraw_safe(:w, 700);   -- ERROR: Insufficient funds: balance 300.00, requested 700
+
+-- =============================================================================
+-- FIX 2: OPTIMISTIC LOCKING with the version column. No lock is held while the
+-- application thinks; the write only succeeds if nobody changed the row.
+-- wallets.version is bumped by a trigger on every update.
+-- =============================================================================
+-- Setup: SELECT p3_reset_wallet('alice', 1000);
+-- 1. A: SELECT balance, version FROM wallets WHERE id = :w;         -- 1000.00, version V
+-- 2. B: SELECT balance, version FROM wallets WHERE id = :w;         -- 1000.00, version V
+-- 3. A: UPDATE wallets SET balance = 300 WHERE id = :w AND version = V;   -- UPDATE 1 (version becomes V+1)
+-- 4. B: UPDATE wallets SET balance = 300 WHERE id = :w AND version = V;   -- UPDATE 0: conflict detected, B must re-read and retry
+-- 5. B: SELECT balance, version FROM wallets WHERE id = :w;         -- 300.00, V+1 : B now sees the truth and refuses the 700 withdrawal
+-- (Replace V with the number you saw. The retry loop is shown in run_scenarios.py.)
+-- Trade off: no waiting, good when conflicts are rare; under heavy contention many retries
+-- are wasted, and then pessimistic locking is better. Wallets of busy lenders use FOR UPDATE;
+-- editing a loan request (version column on loan_requests) uses optimistic locking.
