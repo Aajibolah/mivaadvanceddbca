@@ -1,0 +1,58 @@
+-- =============================================================================
+-- Scenario 4: isolation levels. TWO psql windows, step by step.
+-- =============================================================================
+
+-- ---------- Setup (once) ----------
+-- SELECT p3_reset_wallet('alice', 1000);
+-- SELECT p3_wallet('alice') AS w \gset
+
+-- =============================================================================
+-- 4a. NON REPEATABLE READ under READ COMMITTED
+-- =============================================================================
+-- 1. A: BEGIN ISOLATION LEVEL READ COMMITTED;
+-- 2. A: SELECT balance FROM wallets WHERE id = :w;                  -- 1000.00
+-- 3. B: SELECT post_pair('WALLET_FUNDING', system_wallet('EXTERNAL'), :w, 500, 'top up');   -- autocommit
+-- 4. A: SELECT balance FROM wallets WHERE id = :w;                  -- 1500.00  <-- same query, different answer in ONE transaction
+-- 5. A: COMMIT;
+
+-- =============================================================================
+-- 4b. REPEATABLE READ prevents it (snapshot taken at the first query)
+-- =============================================================================
+-- 1. A: BEGIN ISOLATION LEVEL REPEATABLE READ;
+-- 2. A: SELECT balance FROM wallets WHERE id = :w;                  -- 1500.00
+-- 3. B: SELECT post_pair('WALLET_FUNDING', system_wallet('EXTERNAL'), :w, 500, 'top up');
+-- 4. A: SELECT balance FROM wallets WHERE id = :w;                  -- still 1500.00
+-- 5. A: UPDATE wallets SET balance = balance WHERE id = :w;         -- ERROR: could not serialize access due to concurrent update
+--       (REPEATABLE READ in PostgreSQL also refuses to update a row changed after the snapshot)
+-- 6. A: ROLLBACK;
+-- Use it for reports that must see one consistent picture (e.g. a month end statement run).
+
+-- =============================================================================
+-- 4c. WRITE SKEW under REPEATABLE READ, fixed by SERIALIZABLE
+-- Rule (checked by application code, not a constraint): the total of one borrower's
+-- OPEN requests must not exceed NGN 1,000,000. Two requests of 600,000 each
+-- individually pass the check, together they break the rule. Neither session
+-- updates a row the other updated, so REPEATABLE READ does not notice.
+-- =============================================================================
+-- Setup: SELECT p3_cleanup_requests();   SELECT p3_user('borrower') AS b \gset
+--
+-- Run 1: REPEATABLE READ (the rule breaks)
+-- 1. A: BEGIN ISOLATION LEVEL REPEATABLE READ;
+-- 2. A: SELECT COALESCE(sum(amount),0) FROM loan_requests WHERE borrower_id = :b AND status = 'OPEN';   -- 0
+-- 3. B: BEGIN ISOLATION LEVEL REPEATABLE READ;
+-- 4. B: SELECT COALESCE(sum(amount),0) FROM loan_requests WHERE borrower_id = :b AND status = 'OPEN';   -- 0
+-- 5. A: INSERT INTO loan_requests (borrower_id, amount, purpose, tenor_weeks, interest_rate_pct, expires_at)
+--       VALUES (:b, 600000, 'RENT', 12, 8, now() + interval '14 days');
+-- 6. B: (same INSERT)
+-- 7. A: COMMIT;   B: COMMIT;                                        -- both succeed
+-- 8. SELECT sum(amount) FROM loan_requests WHERE borrower_id = :b AND status = 'OPEN';   -- 1,200,000: rule broken
+--
+-- Run 2: SERIALIZABLE (PostgreSQL detects the dangerous pattern)
+-- Setup: SELECT p3_cleanup_requests();
+-- Repeat steps 1 to 7 with  BEGIN ISOLATION LEVEL SERIALIZABLE;
+-- The second COMMIT (or the second INSERT) fails with:
+--       ERROR: could not serialize access due to read/write dependencies among transactions   (SQLSTATE 40001)
+-- The application must RETRY the whole transaction. On retry the check sees 600,000, the rule
+-- refuses the second request, and the result is correct. See the retry loop in run_scenarios.py.
+-- Cost: SERIALIZABLE transactions can fail at any point, so every caller needs retry logic, and
+-- throughput falls under contention. Use it only for the few rules that span several rows.
