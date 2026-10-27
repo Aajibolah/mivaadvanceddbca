@@ -1,0 +1,44 @@
+# Changelog
+
+## 2026-10-25 (session 1, evening, West Africa Time)
+
+GitHub repo created (private, `Aajibolah/mivaadvanceddbca`, remote `origin` added, nothing pushed yet). Phase 1 committed locally in seven commits (setup files, ER diagram, schema, seed generator, rule tests, normalisation, P1 README). Portfolios 2 to 5, the root README update and this changelog are written but not yet committed; they go in on later days, phase by phase. `docs/TESTING_GUIDE.md` is excluded locally via `.git/info/exclude` and is never committed.
+
+### Setup decisions
+- No Docker (laptop cannot run it): everything native on Windows. PostgreSQL 18 (installed) instead of 16, MongoDB Community Server for Portfolio 4.
+- `docker-compose.yml` kept as an optional PostgreSQL 16 file only.
+
+### Phase 0 (already committed: `chore: initialise repo structure`, `docs: add Copay case study`)
+- Repository structure, `.gitignore`, `.env.example`, `docker-compose.yml`, README skeleton.
+
+### Portfolio 1
+- `schema.sql`: 16 tables, enums, constraints, nine triggers (append only ledger, balanced double entry, cached balance, KYC limit, own request, over funding, oldest instalment first), `wallet_reconciliation` view, `mark_overdue()`.
+- `seed/generate_seed.py`: event simulation (3,200 users by default, `--users 600` supported), loads with `COPY`, re-verifies reconciliation.
+- `rule_tests.sql`: 19 rule tests.
+- `er-diagram.md`, `normalisation.md`, `README.md`.
+
+### Portfolio 2
+- 14 query files, `queries.sql`, `indexes.sql`, `indexes_drop.sql`, `run_plans.ps1`, `summarise_plans.py`, `materialised_view.sql`, `matview_demo.sql`, `statistics.sql`, `performance-analysis.md`, `README.md`.
+
+### Portfolio 3
+- `00_functions.sql` (`fund_loan`, `disburse_loan`, `apply_repayment`, `withdraw_safe`, `transfer`, `transfer_naive`), `01_test_fixtures.sql`, scenario files 02 to 06, `run_scenarios.py`, `concurrency-guide.md`, `README.md`.
+- Schema: added `WALLET_TRANSFER` transaction type.
+
+### Portfolio 4
+- `schema-validation.js`, `seed_from_postgres.py` (with `--also-jsonb`), `queries.js`, `explain.js`, `jsonb_comparison.sql`, `README.md`.
+
+### Portfolio 5
+- Native multi instance scripts: `common.ps1`, `cleanup.ps1`, `replication/` (setup, lag demo, synchronous commit experiment, failover, checks), `partitioning/01_range_partition_ledger.sql`, `sharding/` (setup, loader, routing queries, two phase commit demo), `backup/backup_restore_test.ps1`.
+- Documents: `consistency-and-availability.md`, `sharding-design.md`, `cloud-deployment.md` (discussion only), `backup-and-recovery.md`, `README.md`.
+
+### Root
+- `README.md` updated (native setup, PostgreSQL 18 note, references, draft AI declaration), `docs/SETUP_WINDOWS.md`, `requirements.txt`.
+
+### Testing done during development (not evidence)
+- All code was run on temporary local PostgreSQL 18.1 and MongoDB 7.0.14 instances that have been deleted. Bugs found and fixed this way: invalid schedule insert in `disburse_loan`, stale statement query shape, unreliable "index not used" example, PowerShell argument quoting in the sync experiment, `pg_restore` into a dropped `public` schema, wrongly claimed aggregate pushdown.
+
+### Still to do
+- You run every portfolio on your own machine and capture the screenshots and logs into each `evidence/` folder.
+- Export `er-diagram.png`, fill in `performance-analysis.md` and the backup results table.
+- Write the technical reflection yourself; confirm the AI declaration.
+- Phase 6: Word documentation (`docs/MIT8103_Copay_Portfolio_Documentation.docx`), viva prep Q and A, final checklist.
