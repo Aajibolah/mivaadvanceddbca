@@ -2,7 +2,7 @@
 
 ## 2026-10-25 (session 1, evening, West Africa Time)
 
-GitHub repo created (private, `Aajibolah/mivaadvanceddbca`, remote `origin` added, nothing pushed yet). Phase 1 committed locally in seven commits (setup files, ER diagram, schema, seed generator, rule tests, normalisation, P1 README). Portfolios 2 to 5, the root README update and this changelog are written but not yet committed; they go in on later days, phase by phase. `docs/TESTING_GUIDE.md` is excluded locally via `.git/info/exclude` and is never committed.
+GitHub repo created (private, `Aajibolah/mivaadvanceddbca`). Phase 1 committed and pushed first (seven commits), then on 2026-10-27 Portfolios 2 to 5, the root README update and this changelog were committed in small commits (47 commits in total, all authored by Azeez Akande) and pushed. `docs/TESTING_GUIDE.md` is excluded locally via `.git/info/exclude` and is never committed.
 
 ### Setup decisions
 - No Docker (laptop cannot run it): everything native on Windows. PostgreSQL 18 (installed) instead of 16, MongoDB Community Server for Portfolio 4.
