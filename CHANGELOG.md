@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-01 (session 3, night, West Africa Time)
+
+### Evidence collected and committed
+- Portfolio 3 scenarios 3 to 5 run by the student in pgAdmin 4 (two Query Tool tabs) and screenshots added (`p3-04` to `p3-16`). Still missing: `p3-12-3-deadlock-error.png` and `p3-13-1-b-waiting.png`.
+- Portfolio 5 run by the student: partitioning, replication checks and shard routing in pgAdmin 4; replication, lag, synchronous commit, failover, sharding setup, two phase commit and backup in PowerShell. All evidence in `portfolio-5-distributed-cloud/evidence/`.
+- Portfolio 1: ER diagram exported (`er-diagram.png`). `p1-00-version.png` is held back because it shows passwords; it must be retaken before committing.
+
+### Bugs found by running the scripts and fixed
+- `count_partitions_scanned` (Portfolio 5) missed index scans and returned 1, 6 and 0 instead of 1, 25 and 1. The pattern now accepts Parallel, Backward and "using index" forms.
+- A replication screenshot was taken on the main server instead of the primary on port 5433, which showed an empty result; retaken on the right server.
+- The backup log was incomplete because `Tee-Object` does not capture `Write-Host` output; regenerated with `*>&1` and converted from UTF-16 to UTF-8.
+
+### Documentation
+- Added `portfolio-5-distributed-cloud/pgadmin-steps.md` (partitioning, replication checks, shard routing in pgAdmin, with no passwords).
+- Portfolio 5 README now lists the real evidence files, the tool used for each, and a "Tools used and why" section.
+
+## 2026-10-31 (session 2, evening, West Africa Time)
+
+### Testing and evidence
+- Portfolio 1 tested by the student: all 19 rule tests PASS, reconciliation 0, ER diagram exported (mermaid.live). Screenshots reviewed; `p1-00-version.png` to be retaken without passwords.
+- Portfolio 2 tested: 28 plan files captured, summary table generated, screenshots reviewed and committed. Fixed a Windows-only bug in `run_plans.ps1` (the SQL temp file was written with a BOM, which psql rejected). Filled in `performance-analysis.md` from the measured plans, the pasted `statistics.sql` output and the screenshots.
+- Portfolio 3: `run_scenarios.py` run, log committed (all scenarios behaved as designed). The student found typing SQL into PowerShell error prone, so scenarios 3, 4 and 5 are run in pgAdmin 4 (two Query Tool tabs).
+
+### Documentation
+- Added `portfolio-3-transactions-concurrency/pgadmin-scenarios.md` (scenarios 3 to 5 with ready to paste statements, no psql variables).
+- Added "Tools used and why" sections to the root README and the Portfolio 3 README, written in the student's own voice: scenarios 3 to 5 run in both pgAdmin and the command line, why pgAdmin was adopted (SQL typed at a PowerShell prompt is read as a PowerShell command) and why it was kept.
+- `concurrency-guide.md` points to the pgAdmin version.
+
 ## 2026-10-25 (session 1, evening, West Africa Time)
 
 GitHub repo created (private, `Aajibolah/mivaadvanceddbca`). Phase 1 committed and pushed first (seven commits), then on 2026-10-27 Portfolios 2 to 5, the root README update and this changelog were committed in small commits (47 commits in total, all authored by Azeez Akande) and pushed. `docs/TESTING_GUIDE.md` is excluded locally via `.git/info/exclude` and is never committed.
