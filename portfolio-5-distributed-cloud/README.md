@@ -98,22 +98,36 @@ Run against the main database (set the `PG*` variables first):
 
 See [backup-and-recovery.md](backup-and-recovery.md) for the results table to fill in, PITR, and the strategy.
 
-## Evidence to capture
+## Tools used and why
 
-| File | Command | Show |
+The scripts that create and stop servers (`setup_replication.ps1`, `setup_shards.ps1`, `lag_demo.ps1`, `sync_experiment.ps1`, `failover.ps1`, `cross_shard_2pc.ps1`, `backup_restore_test.ps1`, `cleanup.ps1`) can only be run from PowerShell, so those steps and their screenshots come from the terminal. The plain SQL steps (partitioning, the replication status and read only checks, and the shard routing queries) I ran in pgAdmin 4, as I did for the concurrency scenarios in Portfolio 3, because results and errors are easy to read and capture there and typing SQL at a PowerShell prompt had already caused errors. In pgAdmin, each extra instance is a registered server on its own port (`Primary 5433`, `Replica 5434`, `Router 5440`), and the tab title (for example `copay/copay_admin@Router 5440`) shows which server a result came from. The statements I pasted into pgAdmin are in [pgadmin-steps.md](pgadmin-steps.md).
+
+## Evidence
+
+| File | Tool | Shows |
 |---|---|---|
-| `evidence/p5-01-pg-stat-replication.png` | query on port 5433 | `state = streaming` |
-| `evidence/p5-02-replica-readonly.png` | commands above on port 5434 | row replicated, insert refused |
-| `evidence/p5-03-lag.png` | `lag_demo.ps1` | row not visible, then visible |
-| `evidence/p5-04-sync-timings.png` | `sync_experiment.ps1` Parts A and B | timings per mode |
-| `evidence/p5-05-sync-blocked.png` | `sync_experiment.ps1` Part C | commit stuck in `SyncRep` |
-| `evidence/p5-06-failover.png` | `failover.ps1` | `pg_promote`, writes accepted, new timeline |
-| `evidence/p5-07-partition-pruning.png` | partitioning script | one partition scanned |
-| `evidence/p5-08-partitions-scanned.png` | partitioning script | 1 against 25 |
-| `evidence/p5-09-shard-distribution.png` | `setup_shards.ps1` end and `routing_queries.sql` section 1 | rows per shard |
-| `evidence/p5-10-shard-routing.png` | `routing_queries.sql` sections 2 and 3 | one Foreign Scan against two |
-| `evidence/p5-11-2pc.png` | `cross_shard_2pc.ps1` | three scenarios |
-| `evidence/p5-12-backup-restore.png` | backup script | all checks MATCH |
+| `evidence/p5-01-pg-stat-replication.png` | pgAdmin, `Primary 5433` | `replica1`, `streaming`, `async` |
+| `evidence/p5-02-1-replica-read.png` | pgAdmin, `Replica 5434` | the rows written on the primary are readable on the replica |
+| `evidence/p5-02-2-replica-readonly.png` | pgAdmin, `Replica 5434` | a write is refused: `cannot execute INSERT in a read-only transaction` |
+| `evidence/p5-03-lag.png` | terminal, `lag_demo.ps1` | a row written on the primary is not visible on the replica, then visible after the delay |
+| `evidence/p5-04-sync-timings.png` | terminal, `sync_experiment.ps1` | 300 commits per mode: 16 ms (`off`), 44 ms (`local`), 43 ms (`on`, async); with a synchronous standby 39, 87, 94 and 112 ms |
+| `evidence/p5-05-sync-blocked.png` | terminal, `sync_experiment.ps1` Part C | the commit is stuck in `SyncRep` while the replica is down, and is released by falling back to asynchronous replication |
+| `evidence/p5-06-failover.png` | terminal, `failover.ps1` | the replica is read only, `pg_promote()` makes it a primary, a write is accepted, timeline 2 |
+| `evidence/p5-07-1-partition-rows.png` | pgAdmin, main server | rows in each of the 22 monthly partitions |
+| `evidence/p5-07-2-counts-match.png` | pgAdmin, main server | live ledger and partitioned copy both hold 180,874 rows |
+| `evidence/p5-07-3-pruning.png` | pgAdmin, main server | a one month query scans only `ledger_entries_p2026_03` |
+| `evidence/p5-07-4-unpartitioned.png` | pgAdmin, main server | the same query on the unpartitioned ledger scans the whole table |
+| `evidence/p5-08-partitions-scanned.png` | pgAdmin, main server | partitions touched: 1 with a date range, 25 with no date, 1 with wallet and date range |
+| `evidence/p5-08-2-detach.png` | pgAdmin, main server | a partition detached in one operation keeps its 61 rows and leaves the parent |
+| `evidence/p5-09-shard-distribution.png` | terminal, `setup_shards.ps1` | wallets 1,594 and 1,601 per shard; ledger rows 28,653 and 31,347 |
+| `evidence/p5-10-1-shard-rows.png` | pgAdmin, `Router 5440` | wallets and balances per shard |
+| `evidence/p5-10-2-one-shard.png` | pgAdmin, `Router 5440` | a query with the shard key goes to one `Foreign Scan` |
+| `evidence/p5-10-3-fanout.png` | pgAdmin, `Router 5440` | a query without the shard key goes to both shards |
+| `evidence/p5-10-4-global-aggregate.png` | pgAdmin, `Router 5440` | a global total pulls every row to the router |
+| `evidence/p5-10-5-grouped-aggregate.png` | pgAdmin, `Router 5440` | a total grouped by the shard key is computed on each shard |
+| `evidence/p5-10-6-skew.png` | pgAdmin, `Router 5440` | the five busiest users and their share of the ledger (the busiest holds 3.56 percent) |
+| `evidence/p5-11-2pc.png` | terminal, `cross_shard_2pc.ps1` | two phase commit: success, rollback after a failure, and an in doubt transaction blocking a row |
+| `evidence/p5-12-backup-restore.png`, `evidence/p5-backup-restore.log` | terminal, `backup_restore_test.ps1` | dump and restore with ten matching checks and 0 restore errors |
 
 ## Limits of this setup (state them in your write up)
 
@@ -124,4 +138,4 @@ See [backup-and-recovery.md](backup-and-recovery.md) for the results table to fi
 
 ## Testing
 
-Every script in `replication/`, `partitioning/`, `sharding/` and `backup/` was run end to end on a development machine on PostgreSQL 18.1 while writing them, which found and fixed several script bugs. Those runs are not your evidence: run the scripts yourself and capture your own output.
+I ran every script in `replication/`, `partitioning/`, `sharding/` and `backup/` on my own laptop with PostgreSQL 18.1 and captured the results listed above. Running them found two problems that I fixed: the helper that counts partitions scanned missed index scans (it first reported 1, 6 and 0 instead of 1, 25 and 1), and a screenshot taken on the wrong server (the main server instead of the primary on port 5433) showed an empty replication view. I re-ran both and retook the screenshots.
