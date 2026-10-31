@@ -72,6 +72,28 @@ Full instructions: [docs/SETUP_WINDOWS.md](docs/SETUP_WINDOWS.md). In short:
 | P4 | `mongosh --file portfolio-4-nosql\schema-validation.js`, `python portfolio-4-nosql\seed_from_postgres.py --reset --also-jsonb`, `queries.js`, `explain.js` |
 | P5 | see [portfolio-5-distributed-cloud/README.md](portfolio-5-distributed-cloud/README.md) |
 
+## Tools used and why
+
+I used more than one tool in this project, and I moved between them on purpose. This section explains what I used for each part and why.
+
+| Tool | Used for | Why |
+|---|---|---|
+| `psql` and PowerShell | Loading schemas and functions, running SQL files, the plan capture script, the replication, sharding and backup scripts | Scripts must be repeatable and the Portfolio 5 scripts start and stop extra PostgreSQL servers, which only a shell can do |
+| Python (run from the terminal or VS Code) | The seed generators, the concurrent scenario runner `run_scenarios.py`, the MongoDB seeder | The data generation is code, and the scenario runner opens several real connections at the same time |
+| pgAdmin 4 (Query Tool) | The two session concurrency scenarios in Portfolio 3 (lost update, isolation levels, deadlock), and queries against the extra PostgreSQL instances | Two Query Tool tabs give me Session A and Session B side by side, with results and errors in separate panels. See "Why I used pgAdmin for the concurrency scenarios" below. |
+| MongoDB Compass or `mongosh` | Portfolio 4 collections, queries and explain output | pgAdmin only connects to PostgreSQL, so the document database needs its own client |
+| mermaid.live | The ER diagram image exported from the Mermaid source in `er-diagram.md` | Renders the diagram text to a PNG |
+
+### Why I used pgAdmin for the concurrency scenarios
+
+I ran concurrency scenarios 3, 4 and 5 of Portfolio 3 (lost update, isolation levels and deadlock) in **two** ways: in pgAdmin 4, and from the command line with `psql` and my Python runner `run_scenarios.py`. Every result is therefore confirmed by two different clients.
+
+**Why I switched to pgAdmin in the first place.** I started these scenarios in PowerShell and kept hitting errors. Anything I typed at the PowerShell prompt before starting `psql` was read as a PowerShell command, not SQL (`SELECT` is an alias of `Select-Object` in PowerShell), and the psql-only commands such as `\gset` were easy to get wrong while moving between two windows. The errors were about the tool, not about the database, and they were getting in the way of what the scenarios are meant to show.
+
+**Why I kept using it.** In pgAdmin every Query Tool tab is its own database session, so Session A and Session B sit side by side exactly as the scenarios need. Results and error messages appear in separate panels, so a lock wait, a deadlock or a serialisation failure is easy to see and to capture in a screenshot. The behaviour I am demonstrating (row locks, isolation levels, deadlock detection) happens inside PostgreSQL, so it is the same whichever client sends the statements. I kept the command line reproduction as well so the results do not depend on one client, and I used each tool where it fits best: scripts and automation in the terminal, interactive two session work in pgAdmin.
+
+Each portfolio README states which tool produced which screenshot.
+
 ## Progress checklist
 
 - [x] Phase 0: repository structure, case study
