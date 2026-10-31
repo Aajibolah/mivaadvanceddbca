@@ -1,0 +1,16 @@
+-- q12a_status_active | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:48
+
+                                                  QUERY PLAN                                                   
+---------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=100.44..100.45 rows=1 width=16) (actual time=0.861..0.862 rows=1.00 loops=1)
+   Buffers: shared hit=45
+   ->  Seq Scan on users  (cost=0.00..85.00 rows=3087 width=8) (actual time=0.033..0.591 rows=3087.00 loops=1)
+         Filter: (status = 'ACTIVE'::user_status)
+         Rows Removed by Filter: 113
+         Buffers: shared hit=45
+ Planning:
+   Buffers: shared hit=95
+ Planning Time: 5.026 ms
+ Execution Time: 0.973 ms
+(10 rows)
+

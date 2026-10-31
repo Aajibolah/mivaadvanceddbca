@@ -1,0 +1,37 @@
+-- q01_wallet_statement | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:00
+
+                                                                                    QUERY PLAN                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ WindowAgg  (cost=11.89..152.73 rows=50 width=79) (actual time=0.239..0.456 rows=50.00 loops=1)
+   Window: w1 AS (ORDER BY ledger_entries.created_at, ledger_entries.id ROWS BETWEEN UNBOUNDED PRECEDING AND '1'::bigint PRECEDING)
+   Storage: Memory  Maximum Storage: 17kB
+   Buffers: shared hit=161
+   InitPlan 1
+     ->  Index Scan using wallets_pkey on wallets  (cost=0.28..8.30 rows=1 width=7) (actual time=0.020..0.021 rows=1.00 loops=1)
+           Index Cond: (id = 2283)
+           Index Searches: 1
+           Buffers: shared hit=3
+   ->  Nested Loop  (cost=0.72..143.43 rows=50 width=47) (actual time=0.172..0.341 rows=50.00 loops=1)
+         Buffers: shared hit=158
+         ->  Limit  (cost=0.42..3.41 rows=50 width=30) (actual time=0.147..0.169 rows=50.00 loops=1)
+               Buffers: shared hit=8
+               ->  Index Only Scan using idx_ledger_entries_wallet_created on ledger_entries  (cost=0.42..158.80 rows=2651 width=30) (actual time=0.145..0.165 rows=50.00 loops=1)
+                     Index Cond: (wallet_id = 2283)
+                     Heap Fetches: 0
+                     Index Searches: 1
+                     Buffers: shared hit=8
+         ->  Memoize  (cost=0.30..7.84 rows=1 width=33) (actual time=0.003..0.003 rows=1.00 loops=50)
+               Cache Key: ledger_entries.txn_id
+               Cache Mode: logical
+               Hits: 0  Misses: 50  Evictions: 0  Overflows: 0  Memory Usage: 8kB
+               Buffers: shared hit=150
+               ->  Index Scan using ledger_transactions_pkey on ledger_transactions t  (cost=0.29..7.83 rows=1 width=33) (actual time=0.002..0.002 rows=1.00 loops=50)
+                     Index Cond: (id = ledger_entries.txn_id)
+                     Index Searches: 50
+                     Buffers: shared hit=150
+ Planning:
+   Buffers: shared hit=287
+ Planning Time: 13.418 ms
+ Execution Time: 0.666 ms
+(31 rows)
+

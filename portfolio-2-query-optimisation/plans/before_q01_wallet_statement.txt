@@ -1,0 +1,40 @@
+-- q01_wallet_statement | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:41
+
+                                                                              QUERY PLAN                                                                               
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ WindowAgg  (cost=3908.24..4046.27 rows=50 width=79) (actual time=14.846..15.044 rows=50.00 loops=1)
+   Window: w1 AS (ORDER BY ledger_entries.created_at, ledger_entries.id ROWS BETWEEN UNBOUNDED PRECEDING AND '1'::bigint PRECEDING)
+   Storage: Memory  Maximum Storage: 17kB
+   Buffers: shared hit=1706
+   InitPlan 1
+     ->  Index Scan using wallets_pkey on wallets  (cost=0.28..8.30 rows=1 width=7) (actual time=0.048..0.049 rows=1.00 loops=1)
+           Index Cond: (id = 2283)
+           Index Searches: 1
+           Buffers: shared hit=6
+   ->  Nested Loop  (cost=3897.13..4036.98 rows=50 width=47) (actual time=14.755..14.905 rows=50.00 loops=1)
+         Buffers: shared hit=1700
+         ->  Limit  (cost=3896.83..3896.95 rows=50 width=30) (actual time=14.709..14.715 rows=50.00 loops=1)
+               Buffers: shared hit=1550
+               ->  Sort  (cost=3896.83..3903.86 rows=2814 width=30) (actual time=14.707..14.710 rows=50.00 loops=1)
+                     Sort Key: ledger_entries.created_at DESC, ledger_entries.id DESC
+                     Sort Method: top-N heapsort  Memory: 32kB
+                     Buffers: shared hit=1550
+                     ->  Seq Scan on ledger_entries  (cost=0.00..3803.35 rows=2814 width=30) (actual time=0.039..13.984 rows=2714.00 loops=1)
+                           Filter: (wallet_id = 2283)
+                           Rows Removed by Filter: 178034
+                           Buffers: shared hit=1544
+         ->  Memoize  (cost=0.30..7.84 rows=1 width=33) (actual time=0.003..0.003 rows=1.00 loops=50)
+               Cache Key: ledger_entries.txn_id
+               Cache Mode: logical
+               Hits: 0  Misses: 50  Evictions: 0  Overflows: 0  Memory Usage: 8kB
+               Buffers: shared hit=150
+               ->  Index Scan using ledger_transactions_pkey on ledger_transactions t  (cost=0.29..7.83 rows=1 width=33) (actual time=0.003..0.003 rows=1.00 loops=50)
+                     Index Cond: (id = ledger_entries.txn_id)
+                     Index Searches: 50
+                     Buffers: shared hit=150
+ Planning:
+   Buffers: shared hit=257
+ Planning Time: 12.768 ms
+ Execution Time: 15.233 ms
+(34 rows)
+

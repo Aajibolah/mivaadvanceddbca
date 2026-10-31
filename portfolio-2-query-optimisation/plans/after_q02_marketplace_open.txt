@@ -1,0 +1,31 @@
+-- q02_marketplace_open | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:00
+
+                                                                                         QUERY PLAN                                                                                         
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=250.53..250.54 rows=5 width=80) (actual time=1.055..1.058 rows=20.00 loops=1)
+   Buffers: shared hit=366
+   ->  Sort  (cost=250.53..250.54 rows=5 width=80) (actual time=1.051..1.052 rows=20.00 loops=1)
+         Sort Key: r.created_at DESC
+         Sort Method: top-N heapsort  Memory: 29kB
+         Buffers: shared hit=366
+         ->  Nested Loop Left Join  (cost=9.20..250.47 rows=5 width=80) (actual time=0.080..0.949 rows=98.00 loops=1)
+               Buffers: shared hit=363
+               ->  Bitmap Heap Scan on loan_requests r  (cost=8.92..208.97 rows=5 width=58) (actual time=0.053..0.435 rows=98.00 loops=1)
+                     Recheck Cond: (status = 'OPEN'::request_status)
+                     Filter: ((expires_at > '2026-10-16 00:00:00+01'::timestamp with time zone) AND (amount >= '50000'::numeric) AND (amount <= '500000'::numeric) AND (tenor_weeks <= 26))
+                     Rows Removed by Filter: 57
+                     Heap Blocks: exact=68
+                     Buffers: shared hit=69
+                     ->  Bitmap Index Scan on idx_loan_requests_open_created  (cost=0.00..8.92 rows=155 width=0) (actual time=0.023..0.023 rows=155.00 loops=1)
+                           Index Searches: 1
+                           Buffers: shared hit=1
+               ->  Index Scan using trust_scores_pkey on trust_scores ts  (cost=0.28..8.30 rows=1 width=10) (actual time=0.003..0.003 rows=1.00 loops=98)
+                     Index Cond: (user_id = r.borrower_id)
+                     Index Searches: 98
+                     Buffers: shared hit=294
+ Planning:
+   Buffers: shared hit=253
+ Planning Time: 4.971 ms
+ Execution Time: 1.147 ms
+(25 rows)
+

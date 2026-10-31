@@ -1,0 +1,14 @@
+-- q10_exact_name_lookup | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:47
+
+                                             QUERY PLAN                                              
+-----------------------------------------------------------------------------------------------------
+ Seq Scan on users  (cost=0.00..93.00 rows=16 width=50) (actual time=0.330..1.737 rows=3.00 loops=1)
+   Filter: (lower(full_name) = 'kunle balogun'::text)
+   Rows Removed by Filter: 3197
+   Buffers: shared hit=45
+ Planning:
+   Buffers: shared hit=127
+ Planning Time: 6.222 ms
+ Execution Time: 1.812 ms
+(8 rows)
+

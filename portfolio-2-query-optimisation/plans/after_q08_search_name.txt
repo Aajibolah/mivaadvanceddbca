@@ -1,0 +1,20 @@
+-- q08_search_name | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:03
+
+                                                                QUERY PLAN                                                                 
+-------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=56.16..60.17 rows=1 width=50) (actual time=0.232..0.243 rows=3.00 loops=1)
+   Buffers: shared hit=16
+   ->  Bitmap Heap Scan on users  (cost=56.16..60.17 rows=1 width=50) (actual time=0.229..0.240 rows=3.00 loops=1)
+         Recheck Cond: (full_name ~~* '%unle bal%'::text)
+         Heap Blocks: exact=3
+         Buffers: shared hit=16
+         ->  Bitmap Index Scan on idx_users_full_name_trgm  (cost=0.00..56.16 rows=1 width=0) (actual time=0.187..0.187 rows=3.00 loops=1)
+               Index Cond: (full_name ~~* '%unle bal%'::text)
+               Index Searches: 1
+               Buffers: shared hit=13
+ Planning:
+   Buffers: shared hit=181
+ Planning Time: 5.957 ms
+ Execution Time: 0.695 ms
+(14 rows)
+

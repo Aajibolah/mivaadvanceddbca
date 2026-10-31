@@ -1,0 +1,15 @@
+-- q11_lender_fundings_covering | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:04
+
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using idx_loan_fundings_lender_covering on loan_fundings  (cost=0.29..6.89 rows=149 width=14) (actual time=0.122..0.151 rows=149.00 loops=1)
+   Index Cond: (lender_id = 938)
+   Heap Fetches: 0
+   Index Searches: 1
+   Buffers: shared hit=7
+ Planning:
+   Buffers: shared hit=117
+ Planning Time: 3.794 ms
+ Execution Time: 0.211 ms
+(9 rows)
+

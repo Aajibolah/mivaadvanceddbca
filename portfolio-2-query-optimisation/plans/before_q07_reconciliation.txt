@@ -1,0 +1,26 @@
+-- q07_reconciliation | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:43
+
+                                                               QUERY PLAN                                                               
+----------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=6673.21..6721.13 rows=3179 width=47) (actual time=110.657..110.659 rows=0.00 loops=1)
+   Group Key: w.id
+   Filter: (w.balance <> sum(e.amount))
+   Batches: 1  Memory Usage: 1361kB
+   Rows Removed by Filter: 2799
+   Buffers: shared hit=3415
+   ->  Hash Join  (cost=1942.89..5769.47 rows=180748 width=21) (actual time=5.614..67.471 rows=180748.00 loops=1)
+         Hash Cond: (e.wallet_id = w.id)
+         Buffers: shared hit=3415
+         ->  Seq Scan on ledger_entries e  (cost=0.00..3351.48 rows=180748 width=14) (actual time=0.021..15.324 rows=180748.00 loops=1)
+               Buffers: shared hit=1544
+         ->  Hash  (cost=1902.95..1902.95 rows=3195 width=15) (actual time=5.566..5.567 rows=3195.00 loops=1)
+               Buckets: 4096  Batches: 1  Memory Usage: 181kB
+               Buffers: shared hit=1871
+               ->  Seq Scan on wallets w  (cost=0.00..1902.95 rows=3195 width=15) (actual time=0.023..5.104 rows=3195.00 loops=1)
+                     Buffers: shared hit=1871
+ Planning:
+   Buffers: shared hit=185
+ Planning Time: 5.206 ms
+ Execution Time: 110.936 ms
+(20 rows)
+

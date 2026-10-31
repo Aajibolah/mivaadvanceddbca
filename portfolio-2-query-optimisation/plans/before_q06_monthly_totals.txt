@@ -1,0 +1,36 @@
+-- q06_monthly_totals | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:42
+
+                                                                 QUERY PLAN                                                                 
+--------------------------------------------------------------------------------------------------------------------------------------------
+ WindowAgg  (cost=11197.00..12049.22 rows=42612 width=152) (actual time=21.868..21.899 rows=22.00 loops=1)
+   Window: w1 AS (ORDER BY (COALESCE((date_trunc('month'::text, loans.disbursed_at)), (date_trunc('month'::text, repayments.paid_at)))))
+   Storage: Memory  Maximum Storage: 17kB
+   Buffers: shared hit=660
+   ->  Sort  (cost=11196.98..11303.51 rows=42612 width=104) (actual time=21.589..21.593 rows=22.00 loops=1)
+         Sort Key: (COALESCE((date_trunc('month'::text, loans.disbursed_at)), (date_trunc('month'::text, repayments.paid_at))))
+         Sort Method: quicksort  Memory: 26kB
+         Buffers: shared hit=660
+         ->  Hash Full Join  (cost=4401.04..5589.34 rows=42612 width=104) (actual time=21.467..21.546 rows=22.00 loops=1)
+               Hash Cond: ((date_trunc('month'::text, repayments.paid_at)) = (date_trunc('month'::text, loans.disbursed_at)))
+               Buffers: shared hit=657
+               ->  HashAggregate  (cost=4115.94..5192.37 rows=42612 width=48) (actual time=19.229..19.284 rows=22.00 loops=1)
+                     Group Key: date_trunc('month'::text, repayments.paid_at)
+                     Planned Partitions: 4  Batches: 1  Memory Usage: 545kB
+                     Buffers: shared hit=576
+                     ->  Seq Scan on repayments  (cost=0.00..1135.67 rows=44774 width=15) (actual time=0.019..11.610 rows=44774.00 loops=1)
+                           Buffers: shared hit=576
+               ->  Hash  (cost=231.40..231.40 rows=4296 width=48) (actual time=2.174..2.175 rows=22.00 loops=1)
+                     Buckets: 8192  Batches: 1  Memory Usage: 66kB
+                     Buffers: shared hit=81
+                     ->  HashAggregate  (cost=166.96..231.40 rows=4296 width=48) (actual time=2.148..2.167 rows=22.00 loops=1)
+                           Group Key: date_trunc('month'::text, loans.disbursed_at)
+                           Batches: 1  Memory Usage: 161kB
+                           Buffers: shared hit=81
+                           ->  Seq Scan on loans  (cost=0.00..134.72 rows=4298 width=13) (actual time=0.039..1.390 rows=4298.00 loops=1)
+                                 Buffers: shared hit=81
+ Planning:
+   Buffers: shared hit=187
+ Planning Time: 6.695 ms
+ Execution Time: 22.463 ms
+(30 rows)
+

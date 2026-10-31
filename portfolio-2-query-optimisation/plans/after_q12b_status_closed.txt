@@ -1,0 +1,16 @@
+-- q12b_status_closed | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:04
+
+                                                             QUERY PLAN                                                             
+------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=30.24..30.25 rows=1 width=16) (actual time=0.155..0.155 rows=1.00 loops=1)
+   Buffers: shared hit=34
+   ->  Index Scan using idx_users_status on users  (cost=0.28..29.93 rows=62 width=8) (actual time=0.016..0.132 rows=62.00 loops=1)
+         Index Cond: (status = 'CLOSED'::user_status)
+         Index Searches: 1
+         Buffers: shared hit=34
+ Planning:
+   Buffers: shared hit=151
+ Planning Time: 6.474 ms
+ Execution Time: 0.234 ms
+(10 rows)
+

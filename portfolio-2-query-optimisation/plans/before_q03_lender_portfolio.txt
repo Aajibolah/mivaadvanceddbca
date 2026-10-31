@@ -1,0 +1,33 @@
+-- q03_lender_portfolio | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:42
+
+                                                                   QUERY PLAN                                                                    
+-------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=519.59..519.60 rows=4 width=84) (actual time=2.754..2.756 rows=1.00 loops=1)
+   Sort Key: (sum(f.amount)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=308
+   ->  GroupAggregate  (cost=517.24..519.55 rows=4 width=84) (actual time=2.720..2.722 rows=1.00 loops=1)
+         Group Key: r.status
+         Buffers: shared hit=305
+         ->  Sort  (cost=517.24..517.62 rows=149 width=24) (actual time=2.635..2.640 rows=149.00 loops=1)
+               Sort Key: r.status, f.loan_request_id
+               Sort Method: quicksort  Memory: 31kB
+               Buffers: shared hit=305
+               ->  Hash Join  (cost=205.38..511.87 rows=149 width=24) (actual time=1.267..2.540 rows=149.00 loops=1)
+                     Hash Cond: (r.id = f.loan_request_id)
+                     Buffers: shared hit=297
+                     ->  Seq Scan on loan_requests r  (cost=0.00..260.00 rows=6000 width=18) (actual time=0.038..0.934 rows=6000.00 loops=1)
+                           Buffers: shared hit=200
+                     ->  Hash  (cost=203.51..203.51 rows=149 width=14) (actual time=0.800..0.801 rows=149.00 loops=1)
+                           Buckets: 1024  Batches: 1  Memory Usage: 15kB
+                           Buffers: shared hit=97
+                           ->  Seq Scan on loan_fundings f  (cost=0.00..203.51 rows=149 width=14) (actual time=0.025..0.769 rows=149.00 loops=1)
+                                 Filter: (lender_id = 938)
+                                 Rows Removed by Filter: 8372
+                                 Buffers: shared hit=97
+ Planning:
+   Buffers: shared hit=209
+ Planning Time: 5.261 ms
+ Execution Time: 2.880 ms
+(27 rows)
+

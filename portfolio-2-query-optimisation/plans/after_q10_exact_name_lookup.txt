@@ -1,0 +1,18 @@
+-- q10_exact_name_lookup | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:04
+
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on users  (cost=4.30..11.06 rows=2 width=50) (actual time=0.060..0.065 rows=3.00 loops=1)
+   Recheck Cond: (lower(full_name) = 'kunle balogun'::text)
+   Heap Blocks: exact=3
+   Buffers: shared hit=5
+   ->  Bitmap Index Scan on idx_users_full_name_lower  (cost=0.00..4.29 rows=2 width=0) (actual time=0.035..0.035 rows=3.00 loops=1)
+         Index Cond: (lower(full_name) = 'kunle balogun'::text)
+         Index Searches: 1
+         Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=186
+ Planning Time: 6.375 ms
+ Execution Time: 0.105 ms
+(12 rows)
+

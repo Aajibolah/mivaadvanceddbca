@@ -1,0 +1,36 @@
+-- q09a_correlated | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:03
+
+                                                                                        QUERY PLAN                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=18962.86..18962.91 rows=20 width=54) (actual time=8.427..8.430 rows=20.00 loops=1)
+   Buffers: shared hit=7146
+   ->  Sort  (cost=18962.86..18965.53 rows=1067 width=54) (actual time=8.424..8.427 rows=20.00 loops=1)
+         Sort Key: ((SubPlan 1)) DESC
+         Sort Method: top-N heapsort  Memory: 27kB
+         Buffers: shared hit=7146
+         ->  Seq Scan on users u  (cost=0.00..18934.47 rows=1067 width=54) (actual time=0.221..8.268 rows=321.00 loops=1)
+               Filter: ((SubPlan 2) > '1000000'::numeric)
+               Rows Removed by Filter: 2879
+               Buffers: shared hit=7143
+               SubPlan 1
+                 ->  Aggregate  (cost=4.41..4.42 rows=1 width=32) (actual time=0.004..0.004 rows=1.00 loops=321)
+                       Buffers: shared hit=665
+                       ->  Index Only Scan using idx_loan_fundings_lender_covering on loan_fundings f  (cost=0.29..4.39 rows=6 width=6) (actual time=0.001..0.002 rows=15.22 loops=321)
+                             Index Cond: (lender_id = u.id)
+                             Heap Fetches: 0
+                             Index Searches: 321
+                             Buffers: shared hit=665
+               SubPlan 2
+                 ->  Aggregate  (cost=4.41..4.42 rows=1 width=32) (actual time=0.002..0.002 rows=1.00 loops=3200)
+                       Buffers: shared hit=6433
+                       ->  Index Only Scan using idx_loan_fundings_lender_covering on loan_fundings f_1  (cost=0.29..4.39 rows=6 width=6) (actual time=0.001..0.001 rows=2.66 loops=3200)
+                             Index Cond: (lender_id = u.id)
+                             Heap Fetches: 0
+                             Index Searches: 3200
+                             Buffers: shared hit=6433
+ Planning:
+   Buffers: shared hit=290
+ Planning Time: 12.481 ms
+ Execution Time: 8.522 ms
+(30 rows)
+

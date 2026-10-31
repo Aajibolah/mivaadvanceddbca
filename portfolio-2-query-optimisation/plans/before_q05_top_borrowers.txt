@@ -1,0 +1,48 @@
+-- q05_top_borrowers | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:42
+
+                                                                                  QUERY PLAN                                                                                   
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=3313.50..3313.55 rows=20 width=100) (actual time=33.188..33.193 rows=20.00 loops=1)
+   Buffers: shared hit=1453
+   ->  Sort  (cost=3313.50..3315.03 rows=609 width=100) (actual time=33.185..33.188 rows=20.00 loops=1)
+         Sort Key: (rank() OVER w1)
+         Sort Method: top-N heapsort  Memory: 27kB
+         Buffers: shared hit=1453
+         ->  WindowAgg  (cost=3259.30..3297.30 rows=609 width=100) (actual time=32.182..32.907 rows=1499.00 loops=1)
+               Window: w2 AS (ORDER BY (((per_borrower.paid)::numeric / (per_borrower.due)::numeric)) ROWS UNBOUNDED PRECEDING)
+               Storage: Memory  Maximum Storage: 114kB
+               Buffers: shared hit=1450
+               ->  WindowAgg  (cost=3259.26..3275.98 rows=609 width=64) (actual time=31.350..31.975 rows=1499.00 loops=1)
+                     Window: w1 AS (ORDER BY (((per_borrower.paid)::numeric / (per_borrower.due)::numeric)), per_borrower.due ROWS UNBOUNDED PRECEDING)
+                     Storage: Memory  Maximum Storage: 17kB
+                     Buffers: shared hit=1450
+                     ->  Sort  (cost=3259.24..3260.76 rows=609 width=56) (actual time=31.339..31.391 rows=1499.00 loops=1)
+                           Sort Key: (((per_borrower.paid)::numeric / (per_borrower.due)::numeric)) DESC, per_borrower.due DESC
+                           Sort Method: quicksort  Memory: 123kB
+                           Buffers: shared hit=1450
+                           ->  Subquery Scan on per_borrower  (cost=3203.67..3231.07 rows=609 width=56) (actual time=29.997..30.686 rows=1499.00 loops=1)
+                                 Buffers: shared hit=1447
+                                 ->  HashAggregate  (cost=3203.67..3226.50 rows=609 width=24) (actual time=29.983..30.263 rows=1499.00 loops=1)
+                                       Group Key: l.borrower_id
+                                       Filter: (count(*) >= 10)
+                                       Batches: 1  Memory Usage: 217kB
+                                       Rows Removed by Filter: 319
+                                       Buffers: shared hit=1447
+                                       ->  Hash Join  (cost=177.71..2645.44 rows=55823 width=12) (actual time=1.151..21.471 rows=55822.00 loops=1)
+                                             Hash Cond: (s.loan_id = l.id)
+                                             Buffers: shared hit=1447
+                                             ->  Seq Scan on repayment_schedules s  (cost=0.00..2321.05 rows=55823 width=12) (actual time=0.080..10.367 rows=55822.00 loops=1)
+                                                   Filter: (due_date < '2026-10-15'::date)
+                                                   Rows Removed by Filter: 20582
+                                                   Buffers: shared hit=1366
+                                             ->  Hash  (cost=123.98..123.98 rows=4298 width=16) (actual time=1.030..1.030 rows=4298.00 loops=1)
+                                                   Buckets: 8192  Batches: 1  Memory Usage: 266kB
+                                                   Buffers: shared hit=81
+                                                   ->  Seq Scan on loans l  (cost=0.00..123.98 rows=4298 width=16) (actual time=0.016..0.589 rows=4298.00 loops=1)
+                                                         Buffers: shared hit=81
+ Planning:
+   Buffers: shared hit=196
+ Planning Time: 5.964 ms
+ Execution Time: 33.587 ms
+(42 rows)
+

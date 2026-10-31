@@ -1,0 +1,34 @@
+-- q03_lender_portfolio | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:01
+
+                                                                                          QUERY PLAN                                                                                          
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=322.97..322.98 rows=4 width=84) (actual time=2.059..2.061 rows=1.00 loops=1)
+   Sort Key: (sum(f.amount)) DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=218
+   ->  GroupAggregate  (cost=320.62..322.93 rows=4 width=84) (actual time=2.015..2.017 rows=1.00 loops=1)
+         Group Key: r.status
+         Buffers: shared hit=215
+         ->  Sort  (cost=320.62..321.00 rows=149 width=24) (actual time=1.914..1.923 rows=149.00 loops=1)
+               Sort Key: r.status, f.loan_request_id
+               Sort Method: quicksort  Memory: 31kB
+               Buffers: shared hit=215
+               ->  Hash Join  (cost=8.76..315.25 rows=149 width=24) (actual time=0.563..1.792 rows=149.00 loops=1)
+                     Hash Cond: (r.id = f.loan_request_id)
+                     Buffers: shared hit=207
+                     ->  Seq Scan on loan_requests r  (cost=0.00..260.00 rows=6000 width=18) (actual time=0.019..0.786 rows=6000.00 loops=1)
+                           Buffers: shared hit=200
+                     ->  Hash  (cost=6.89..6.89 rows=149 width=14) (actual time=0.225..0.226 rows=149.00 loops=1)
+                           Buckets: 1024  Batches: 1  Memory Usage: 15kB
+                           Buffers: shared hit=7
+                           ->  Index Only Scan using idx_loan_fundings_lender_covering on loan_fundings f  (cost=0.29..6.89 rows=149 width=14) (actual time=0.164..0.195 rows=149.00 loops=1)
+                                 Index Cond: (lender_id = 938)
+                                 Heap Fetches: 0
+                                 Index Searches: 1
+                                 Buffers: shared hit=7
+ Planning:
+   Buffers: shared hit=248
+ Planning Time: 7.463 ms
+ Execution Time: 2.209 ms
+(28 rows)
+

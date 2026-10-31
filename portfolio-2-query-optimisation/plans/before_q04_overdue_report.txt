@@ -1,0 +1,40 @@
+-- q04_overdue_report | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:42
+
+                                                                         QUERY PLAN                                                                         
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=4267.71..4267.77 rows=25 width=85) (actual time=23.757..23.763 rows=25.00 loops=1)
+   Buffers: shared hit=1495
+   ->  Sort  (cost=4267.71..4325.25 rows=23016 width=85) (actual time=23.754..23.758 rows=25.00 loops=1)
+         Sort Key: (sum((s.amount_due - s.amount_paid))) DESC
+         Sort Method: top-N heapsort  Memory: 30kB
+         Buffers: shared hit=1495
+         ->  HashAggregate  (cost=3272.97..3618.21 rows=23016 width=85) (actual time=22.957..23.404 rows=1117.00 loops=1)
+               Group Key: l.id, u.phone
+               Batches: 1  Memory Usage: 1169kB
+               Buffers: shared hit=1492
+               ->  Hash Join  (cost=294.71..2927.73 rows=23016 width=53) (actual time=10.612..17.612 rows=11225.00 loops=1)
+                     Hash Cond: (l.borrower_id = u.id)
+                     Buffers: shared hit=1492
+                     ->  Hash Join  (cost=177.71..2750.24 rows=23016 width=32) (actual time=9.646..14.138 rows=11225.00 loops=1)
+                           Hash Cond: (s.loan_id = l.id)
+                           Buffers: shared hit=1447
+                           ->  Seq Scan on repayment_schedules s  (cost=0.00..2512.06 rows=23016 width=24) (actual time=7.806..9.948 rows=11225.00 loops=1)
+                                 Filter: ((status <> 'PAID'::instalment_status) AND (due_date < '2026-10-15'::date))
+                                 Rows Removed by Filter: 65179
+                                 Buffers: shared hit=1366
+                           ->  Hash  (cost=123.98..123.98 rows=4298 width=16) (actual time=1.781..1.782 rows=4298.00 loops=1)
+                                 Buckets: 8192  Batches: 1  Memory Usage: 266kB
+                                 Buffers: shared hit=81
+                                 ->  Seq Scan on loans l  (cost=0.00..123.98 rows=4298 width=16) (actual time=0.025..1.018 rows=4298.00 loops=1)
+                                       Buffers: shared hit=81
+                     ->  Hash  (cost=77.00..77.00 rows=3200 width=37) (actual time=0.947..0.948 rows=3200.00 loops=1)
+                           Buckets: 4096  Batches: 1  Memory Usage: 259kB
+                           Buffers: shared hit=45
+                           ->  Seq Scan on users u  (cost=0.00..77.00 rows=3200 width=37) (actual time=0.021..0.443 rows=3200.00 loops=1)
+                                 Buffers: shared hit=45
+ Planning:
+   Buffers: shared hit=332
+ Planning Time: 10.934 ms
+ Execution Time: 24.373 ms
+(34 rows)
+

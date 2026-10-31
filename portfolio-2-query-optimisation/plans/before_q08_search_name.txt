@@ -1,0 +1,16 @@
+-- q08_search_name | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:43
+
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.00..85.00 rows=1 width=50) (actual time=0.213..1.734 rows=3.00 loops=1)
+   Buffers: shared hit=45
+   ->  Seq Scan on users  (cost=0.00..85.00 rows=1 width=50) (actual time=0.210..1.730 rows=3.00 loops=1)
+         Filter: (full_name ~~* '%unle bal%'::text)
+         Rows Removed by Filter: 3197
+         Buffers: shared hit=45
+ Planning:
+   Buffers: shared hit=118
+ Planning Time: 3.224 ms
+ Execution Time: 1.775 ms
+(10 rows)
+

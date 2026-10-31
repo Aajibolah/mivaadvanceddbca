@@ -1,0 +1,26 @@
+-- q02_marketplace_open | phase=before | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:34:41
+
+                                                                                                            QUERY PLAN                                                                                                            
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=376.56..376.58 rows=5 width=80) (actual time=1.491..1.493 rows=20.00 loops=1)
+   Buffers: shared hit=497
+   ->  Sort  (cost=376.56..376.58 rows=5 width=80) (actual time=1.488..1.489 rows=20.00 loops=1)
+         Sort Key: r.created_at DESC
+         Sort Method: top-N heapsort  Memory: 29kB
+         Buffers: shared hit=497
+         ->  Nested Loop Left Join  (cost=0.28..376.51 rows=5 width=80) (actual time=0.044..1.422 rows=98.00 loops=1)
+               Buffers: shared hit=494
+               ->  Seq Scan on loan_requests r  (cost=0.00..335.00 rows=5 width=58) (actual time=0.017..1.135 rows=98.00 loops=1)
+                     Filter: ((expires_at > '2026-10-16 00:00:00+01'::timestamp with time zone) AND (amount >= '50000'::numeric) AND (amount <= '500000'::numeric) AND (tenor_weeks <= 26) AND (status = 'OPEN'::request_status))
+                     Rows Removed by Filter: 5902
+                     Buffers: shared hit=200
+               ->  Index Scan using trust_scores_pkey on trust_scores ts  (cost=0.28..8.30 rows=1 width=10) (actual time=0.002..0.002 rows=1.00 loops=98)
+                     Index Cond: (user_id = r.borrower_id)
+                     Index Searches: 98
+                     Buffers: shared hit=294
+ Planning:
+   Buffers: shared hit=236
+ Planning Time: 6.047 ms
+ Execution Time: 1.556 ms
+(20 rows)
+

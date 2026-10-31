@@ -1,0 +1,34 @@
+-- q09b_join | phase=after | PostgreSQL 18.1 | wallet_id=2283 lender_id=938 | 2026-10-31T18:35:03
+
+                                                                      QUERY PLAN                                                                       
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=352.86..352.91 rows=20 width=54) (actual time=4.163..4.167 rows=20.00 loops=1)
+   Buffers: shared hit=145
+   ->  Sort  (cost=352.86..353.99 rows=453 width=54) (actual time=4.160..4.162 rows=20.00 loops=1)
+         Sort Key: f.total_funded DESC
+         Sort Method: top-N heapsort  Memory: 27kB
+         Buffers: shared hit=145
+         ->  Hash Join  (cost=255.39..340.80 rows=453 width=54) (actual time=3.544..4.045 rows=321.00 loops=1)
+               Hash Cond: (u.id = f.lender_id)
+               Buffers: shared hit=142
+               ->  Seq Scan on users u  (cost=0.00..77.00 rows=3200 width=22) (actual time=0.019..0.214 rows=3200.00 loops=1)
+                     Buffers: shared hit=45
+               ->  Hash  (cost=249.73..249.73 rows=453 width=40) (actual time=3.506..3.506 rows=321.00 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 24kB
+                     Buffers: shared hit=97
+                     ->  Subquery Scan on f  (cost=224.82..249.73 rows=453 width=40) (actual time=3.150..3.452 rows=321.00 loops=1)
+                           Buffers: shared hit=97
+                           ->  HashAggregate  (cost=224.82..245.20 rows=453 width=40) (actual time=3.149..3.431 rows=321.00 loops=1)
+                                 Group Key: loan_fundings.lender_id
+                                 Filter: (sum(loan_fundings.amount) > '1000000'::numeric)
+                                 Batches: 1  Memory Usage: 625kB
+                                 Rows Removed by Filter: 1038
+                                 Buffers: shared hit=97
+                                 ->  Seq Scan on loan_fundings  (cost=0.00..182.21 rows=8521 width=14) (actual time=0.009..0.542 rows=8521.00 loops=1)
+                                       Buffers: shared hit=97
+ Planning:
+   Buffers: shared hit=299
+ Planning Time: 8.998 ms
+ Execution Time: 4.391 ms
+(28 rows)
+
