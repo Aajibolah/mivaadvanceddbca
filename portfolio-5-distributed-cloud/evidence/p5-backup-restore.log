@@ -1,0 +1,42 @@
+Source database: copay on localhost:5432  (PostgreSQL 18.1 on x86_64-windows, compiled by msvc-19.44.35219, 64-bit)
+
+1. Taking the dump (custom format, compressed) ...
+   C:\Users\User\Downloads\chronos projects\miva-db-course\portfolio-5-distributed-cloud\backup\out\copay_20261101_004605.dump  7.8 MB  in 4.6 s
+   Database size on disk: 136 MB
+
+   Contents of the dump (first entries of pg_restore --list):
+     ;
+     ; Archive created at 2026-11-01 00:46:06
+     ;     dbname: copay
+     ;     TOC Entries: 358
+     ;     Compression: gzip
+     ;     Dump Version: 1.16-0
+     ;     Format: CUSTOM
+     ;     Integer: 4 bytes
+   Schema only SQL dump: C:\Users\User\Downloads\chronos projects\miva-db-course\portfolio-5-distributed-cloud\backup\out\copay_schema_20261101_004605.sql (100 KB), 
+readable and diff friendly
+
+2. Restoring into a new database 'copay_restore_test' ...
+   restore finished in 8.4 s with 0 error(s)
+
+3. Comparing source and restored copy
+check                                           source                          restored  result
+ledger_amount_sum                                 0.00                              0.00  MATCH
+ledger_checksum       ed02cef066114967e55add27a32c26c0  ed02cef066114967e55add27a32c26c0  MATCH
+ledger_entries                                  180874                            180874  MATCH
+loan_requests                                     6004                              6004  MATCH
+loans                                             4300                              4300  MATCH
+reconciliation_bad                                   0                                 0  MATCH
+repayments                                       44778                             44778  MATCH
+users                                             3203                              3203  MATCH
+wallet_balance_sum                                0.00                              0.00  MATCH
+wallets                                           3198                              3198  MATCH
+
+Triggers present on restored ledger_entries: 4 (source: 4)
+
+4. Does the restored database still enforce the rules? (append only ledger)
+   ERROR:  The ledger is append only: DELETE on ledger_entries is not allowed
+
+5. Test database dropped.
+
+OVERALL: backup verified by restore
