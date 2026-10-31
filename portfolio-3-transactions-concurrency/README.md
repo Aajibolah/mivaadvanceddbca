@@ -15,7 +15,19 @@ Money moves in Copay only through transactions that either complete fully or lea
 | [06_idempotency.sql](06_idempotency.sql) | Scenario 6: idempotency keys on funding and repayment |
 | [run_scenarios.py](run_scenarios.py) | Runs all scenarios with real concurrent connections and prints the outcome |
 | [concurrency-guide.md](concurrency-guide.md) | Table of every scenario: Session A steps, Session B steps, expected output, screenshot name |
-| `evidence/` | Your screenshots and logs |
+| [pgadmin-scenarios.md](pgadmin-scenarios.md) | Scenarios 3, 4 and 5 written for two pgAdmin Query Tool tabs, with ready to paste statements |
+| `evidence/` | Screenshots and logs |
+
+## Tools used and why
+
+| Part | Tool | Reason |
+|---|---|---|
+| Loading the functions, the single session scenarios (1, 2, 6) and the automated runner `run_scenarios.py` | `psql` and Python from the command line | These are scripts, and the runner opens several real database connections at once, which a graphical client cannot do |
+| Scenarios 3, 4 and 5 (lost update, isolation levels, deadlock) | pgAdmin 4 Query Tool, two tabs as Session A and Session B, **and** the command line (`psql` windows and `run_scenarios.py`) | I ran these scenarios both ways so that each result is confirmed by two different clients. See below for why I used pgAdmin |
+
+**Why I switched to pgAdmin.** I started scenarios 3 to 5 in PowerShell and kept hitting errors. SQL typed at the PowerShell prompt before starting `psql` was read as a PowerShell command (`SELECT` is an alias of `Select-Object`), and psql-only commands such as `\gset` were easy to get wrong while moving between two windows. Those errors were about the tool, not the database, and they hid what the scenarios are meant to show.
+
+**Why I kept using it.** Each pgAdmin Query Tool tab is its own database session, so Session A and Session B sit side by side exactly as the scenarios need. Results and error messages appear in separate panels, which makes a lock wait, a deadlock or a serialisation failure easy to see and to capture. The behaviour itself happens inside PostgreSQL and is the same whichever client sends the statements. I kept the command line reproduction too, and its log is in `evidence/run_scenarios.log`, so the results do not depend on a single tool. The statements I used in pgAdmin are in [pgadmin-scenarios.md](pgadmin-scenarios.md).
 
 ## How it works
 

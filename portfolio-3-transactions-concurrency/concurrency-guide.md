@@ -1,6 +1,6 @@
 # Concurrency guide: what to run and what to capture
 
-Open two `psql` windows (Session A and Session B). In each, set the connection variables (see [docs/SETUP_WINDOWS.md](../docs/SETUP_WINDOWS.md)). Before the first scenario, once:
+Open two sessions (A and B): either two `psql` windows as described here, or two pgAdmin Query Tool tabs, for which [pgadmin-scenarios.md](pgadmin-scenarios.md) has the same scenarios with the statements ready to paste. I ran scenarios 3, 4 and 5 both in pgAdmin and from the command line (see the README for why). For `psql`, set the connection variables first (see [docs/SETUP_WINDOWS.md](../docs/SETUP_WINDOWS.md)). Before the first scenario, once:
 
 ```powershell
 psql -v ON_ERROR_STOP=1 -f 00_functions.sql
@@ -9,7 +9,7 @@ psql -v ON_ERROR_STOP=1 -f 01_test_fixtures.sql
 
 Scenario files contain the exact statements, as numbered steps with the session each belongs to. Statements starting with `-- 1. A:` are typed into Session A, and so on. Run them in the order given.
 
-Name screenshots `p3-NN-description.png` and save them in `evidence/`. Also save full text logs where useful (`\o evidence/p3-xx.log`).
+Name screenshots `p3-NN-description.png` and save them in `evidence/`. For scenarios 3, 4 and 5 the pgAdmin guide [pgadmin-scenarios.md](pgadmin-scenarios.md) marks the exact moment for each screenshot and gives several numbered names per scenario (for example `p3-05-4-b-waiting.png`), which replace the single names in the table below. Also save full text logs where useful (`\o evidence/p3-xx.log`).
 
 | # | Scenario | File | Session A | Session B | Expected output | Screenshot |
 |---|---|---|---|---|---|---|
