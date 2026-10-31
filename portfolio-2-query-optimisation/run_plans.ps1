@@ -49,17 +49,20 @@ $vars = @('-v', "wallet_id=$walletId", '-v', "lender_id=$lenderId",
           '-v', 'as_of=2026-10-15', '-v', 'as_of_ts=2026-10-15 23:00:00+00')
 Write-Host "Parameters: wallet_id=$walletId lender_id=$lenderId  (PostgreSQL $version)"
 
+# Windows PowerShell 5.1 adds a byte order mark (BOM) when it writes 'utf8'. A psql client running
+# with a Windows code page reads those three bytes as text and fails ("ï»¿EXPLAIN"). Write the files
+# without a BOM instead.
+$noBom = New-Object System.Text.UTF8Encoding($false)
 $tmp = Join-Path $env:TEMP 'copay_explain.sql'
 foreach ($file in Get-ChildItem (Join-Path $here 'queries') -Filter 'q*.sql' | Sort-Object Name) {
     $name = $file.BaseName
-    $body = Get-Content $file.FullName -Raw
-    Set-Content -Path $tmp -Value ("EXPLAIN (ANALYZE, BUFFERS, SETTINGS)`n" + $body) -Encoding utf8
+    $body = [System.IO.File]::ReadAllText($file.FullName)
+    [System.IO.File]::WriteAllText($tmp, "EXPLAIN (ANALYZE, BUFFERS, SETTINGS)`n" + $body, $noBom)
     Invoke-Psql (@('-o', 'NUL', '-f', $tmp) + $vars)                  # warm up
     $out = Join-Path $plans "${Phase}_${name}.txt"
     $header = "-- $name | phase=$Phase | PostgreSQL $version | wallet_id=$walletId lender_id=$lenderId | $(Get-Date -Format s)`n"
-    Set-Content -Path $out -Value $header -Encoding utf8
     Invoke-Psql (@('-o', "$out.tmp", '-f', $tmp) + $vars)
-    Add-Content -Path $out -Value (Get-Content "$out.tmp") -Encoding utf8
+    [System.IO.File]::WriteAllText($out, $header + "`n" + ((Get-Content "$out.tmp") -join "`n") + "`n", $noBom)
     Remove-Item "$out.tmp"
     Write-Host "  saved $out"
 }
