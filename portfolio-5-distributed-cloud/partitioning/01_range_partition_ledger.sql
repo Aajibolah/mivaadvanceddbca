@@ -84,7 +84,9 @@ DECLARE
     n integer := 0;
 BEGIN
     FOR r IN EXECUTE 'EXPLAIN (COSTS OFF) ' || p_query LOOP
-        IF r ~ '^\s*(->\s+)?(Seq Scan|Bitmap Heap Scan|Index Scan|Index Only Scan)[A-Za-z ]* on ledger_entries_p' THEN
+        -- A scan node of any kind on a ledger partition: Seq/Bitmap Heap/Index/Index Only Scan, optionally
+        -- Parallel, Backward and "using <index>", followed by "on ledger_entries_p<month or default>".
+        IF r ~ '^\s*(->\s+)?(Parallel )?(Seq Scan|Bitmap Heap Scan|Index Scan|Index Only Scan)( Backward)?( using \S+)? on ledger_entries_p' THEN
             n := n + 1;
         END IF;
     END LOOP;
