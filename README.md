@@ -1,9 +1,12 @@
 # Copay: Advanced Database Systems Portfolio
 
 **Course:** MIT 8103 Advanced Database Systems, First Semester Continuous Assessment, 2026/2027
+
 **Institution:** Miva Open University (Master of Information Technology)
+
 **Student:** Azeez Akande
-**Assessment:** Individual Practical Database Portfolio (40 marks)
+
+**Assessment:** Individual Practical Database Portfolio 
 
 ## Case study
 
