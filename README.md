@@ -96,13 +96,13 @@ Each portfolio README states which tool produced which screenshot.
 
 ## Progress checklist
 
-- [x] Phase 0: repository structure, case study
-- [ ] Phase 1: Portfolio 1, database design and modelling (code and documents written; run it, capture the evidence in `portfolio-1-database-design/evidence/`, export the ER diagram PNG)
-- [ ] Phase 2: Portfolio 2, query processing and optimisation (run the plan scripts yourself, fill in `performance-analysis.md`)
-- [ ] Phase 3: Portfolio 3, transactions and concurrency (run the scenarios, capture screenshots)
-- [ ] Phase 4: Portfolio 4, NoSQL and advanced data models (install MongoDB, run the scripts, capture screenshots)
-- [ ] Phase 5: Portfolio 5, distributed and cloud database exercise (run the scripts, capture screenshots)
-- [ ] Phase 6: final documentation, reflection and checklist
+- [x] Phase 0: repository structure and case study
+- [x] Phase 1: Portfolio 1, database design and modelling (schema, seed, 19 rule tests, ER diagram and screenshots)
+- [x] Phase 2: Portfolio 2, query processing and optimisation (14 queries, 28 execution plans, measured analysis and screenshots)
+- [x] Phase 3: Portfolio 3, transactions and concurrency (nine scenarios in pgAdmin and from the command line, screenshots and log)
+- [x] Phase 4: Portfolio 4, NoSQL and advanced data models (MongoDB 9.0.4, JSONB comparison, screenshots)
+- [x] Phase 5: Portfolio 5, distributed and cloud database exercise (replication, partitioning, sharding, backup, screenshots; the cloud part is a design discussion only)
+- [x] Phase 6: final documentation (the written report for the learning management system is submitted separately, outside this repository)
 
 ## Testing approach
 
@@ -122,13 +122,11 @@ Each portfolio folder has scripts that check themselves and print PASS or MATCH 
 - PostgreSQL Global Development Group, *PostgreSQL 18 Documentation*: https://www.postgresql.org/docs/18/ (chapters on constraints, triggers, concurrency control, performance tips, indexes, high availability, partitioning, `postgres_fdw`, continuous archiving and PITR).
 - MongoDB Inc., *MongoDB Manual*: https://www.mongodb.com/docs/manual/ (schema validation, aggregation pipeline, indexes, TTL indexes, `$graphLookup`, replication, read and write concern).
 - Python libraries: psycopg 3 (https://www.psycopg.org/psycopg3/docs/), PyMongo (https://pymongo.readthedocs.io/), Faker (https://faker.readthedocs.io/).
-- Add here the textbooks and course materials you actually used, for example the prescribed database textbook and *Designing Data Intensive Applications* by M. Kleppmann if you read it.
+- MIT 8103 Advanced Database Systems course material, Miva Open University (the module content and assessment brief).
 - Nigeria Data Protection Act 2023, for the data residency discussion in Portfolio 5.
 
 ## AI Use Declaration
 
-> Draft for the student to confirm. Keep only statements that are true; edit anything that is not.
-
-1. **Tool used:** Claude (Anthropic), via Claude Code.
-2. **What it was used for:** drafting the SQL schema and scripts, the Python seed and scenario scripts, the PowerShell scripts, the MongoDB scripts and the explanatory documentation templates, under my direction and following the assessment brief.
-3. **How I reviewed, corrected, tested and verified it:** [CONFIRM AND COMPLETE AFTER YOU HAVE DONE THESE THINGS] I ran every script on my own machine, captured all outputs and screenshots myself, read and modified the code, and can explain each design choice. The technical reflection is written by me without AI assistance.
+1. **Tool used:** Claude (Anthropic), through Claude Code. No other AI tool was used.
+2. **What it was used for:** drafting the SQL schema and scripts, the Python seed and scenario scripts, the PowerShell scripts, the MongoDB scripts, the guides and the written documentation (including the first draft of the written report and the technical reflection), all under my direction and following the assessment brief.
+3. **How I reviewed, corrected, tested and verified it:** I ran every script on my own computer and took every screenshot myself. When a command failed or a result looked wrong I reported it, and the scripts and guides were corrected and run again (for example a Windows encoding fault in the plan capture script, a partition counting function that missed index scans, and a screenshot taken on the wrong server). I reviewed the written report and the reflection before submitting them. Every result in this repository comes from a command I ran.
