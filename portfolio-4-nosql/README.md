@@ -49,20 +49,25 @@
 
 ## How to run
 
-Prerequisites: PostgreSQL loaded (Portfolio 1), MongoDB Community Server and `mongosh` installed ([docs/SETUP_WINDOWS.md](../docs/SETUP_WINDOWS.md)), the Python venv active.
+Prerequisites: PostgreSQL loaded (Portfolio 1), a MongoDB server running on `localhost:27017` (I used MongoDB Community Server 9.0.4 as a Windows service), MongoDB Compass for the shell, and the Python venv active ([docs/SETUP_WINDOWS.md](../docs/SETUP_WINDOWS.md)).
 
-```powershell
-cd portfolio-4-nosql
-mongosh "mongodb://localhost:27017" --file schema-validation.js       # collections + validators + 5 PASS lines
-python seed_from_postgres.py --reset --also-jsonb                       # row counts printed
-mongosh "mongodb://localhost:27017" --file queries.js                   # CRUD, aggregations, graph, TTL
-mongosh "mongodb://localhost:27017" --file explain.js                   # before/after plans
-psql -f jsonb_comparison.sql                                            # PostgreSQL JSONB comparison
-```
+| Step | Tool | What |
+|---|---|---|
+| 1 | Compass shell (`>_MONGOSH`) | paste `schema-validation.js`: collections, validators and five PASS lines |
+| 2 | PowerShell | `python portfolio-4-nosql\seed_from_postgres.py --reset --also-jsonb`: loads the collections from PostgreSQL and the JSONB copy |
+| 3 | Compass shell | paste `queries.js`: indexes, CRUD, aggregations, graph traversal and the TTL demo |
+| 4 | Compass shell | after 90 seconds, `db.getSiblingDB('copay_docs').notifications.countDocuments({pg_id: -1})` returns 0 |
+| 5 | Compass shell | paste `explain.js`: plans before and after indexing |
+| 6 | pgAdmin | the statements from `jsonb_comparison.sql` one at a time (psql only commands removed) |
+| 7 | Compass | browse the collections, the Indexes tab and the Validation tab for the screenshots |
 
-If your MongoDB uses authentication, put the credentials in the URI (`mongodb://user:pass@localhost:27017/?authSource=admin`) and set `MONGO_URI` for the Python script. Never commit credentials.
+The same scripts also run from a terminal with `mongosh "mongodb://localhost:27017" --file <script>` once the standalone `mongosh` is installed. If your MongoDB uses authentication, put the credentials in `MONGO_URI` and never commit them.
 
-The TTL demo in `queries.js` inserts a notification that expires in 15 seconds. MongoDB checks TTL indexes about once a minute, so wait 60 to 90 seconds and run `db.getSiblingDB('copay_docs').notifications.countDocuments({pg_id: -1})`. It should return 0.
+The TTL demo in `queries.js` inserts a notification that expires in 15 seconds. MongoDB checks TTL indexes about once a minute, so I waited 90 seconds before running the count.
+
+## Tools used and why
+
+MongoDB cannot be reached from pgAdmin, so the document database work used **MongoDB Compass**: its built in MongoDB shell ran the JavaScript scripts, and its collection views gave the screenshots of a nested document, the indexes and the validation rules. The Python seeder is a script and ran in **PowerShell**. The JSONB comparison is plain PostgreSQL, so I ran it in **pgAdmin**, one statement at a time, because the original file uses psql only commands and pgAdmin shows only the last result of a multi statement run. I did not install the standalone `mongosh` because Compass includes the same shell and disk space on my laptop was limited.
 
 ## Design points to explain
 
@@ -104,19 +109,29 @@ Conclusion: at Copay's current size JSONB alone would work and is simpler to ope
 - For Copay: activity events and notifications tolerate eventual consistency and use default or `w:1` writes for speed. Anything involving money does not live here.
 - This local setup is a single node, so these are discussion points only. Replication and failover are demonstrated for PostgreSQL in Portfolio 5.
 
-## Evidence to capture
+## Evidence
 
-| File | Command | Show |
+| File | Tool | Shows |
 |---|---|---|
-| `evidence/p4-01-validation.png` | `schema-validation.js` | collections and five PASS lines |
-| `evidence/p4-02-seed.png` | `seed_from_postgres.py` | document counts |
-| `evidence/p4-03-queries.png` | `queries.js` | CRUD and aggregation output |
-| `evidence/p4-04-graph.png` | section 7 of `queries.js` | hops, edges, distinct borrowers |
-| `evidence/p4-05-ttl.png` | TTL check after 90 seconds | count 0 |
-| `evidence/p4-06-explain.png` | `explain.js` | docsExamined before and after |
-| `evidence/p4-07-jsonb.png` | `jsonb_comparison.sql` | Bitmap Index Scan on the GIN index |
-| `evidence/p4-08-compass.png` (optional) | MongoDB Compass | a loan application document with embedded parts |
+| `evidence/p4-01-validation.png` | Compass shell | four collections created and five invalid documents rejected (code 121) |
+| `evidence/p4-02-seed.png` | PowerShell | notifications 22,178; trust edges 8,410; loan applications 6,004; activity events 80,419; JSONB copy 6,004 |
+| `evidence/p4-03-queries-a.png` to `p4-03-queries-d.png` | Compass shell | indexes, CRUD, schema validation rejecting an update, events per user per day, monthly funnel, notification read rate, applicants by employment type, nested and array queries |
+| `evidence/p4-04-graph.png` | Compass shell | `$graphLookup` from the most connected lender: 396, 493 and 313 edges at hops 0, 1 and 2 |
+| `evidence/p4-05-ttl-1.png`, `p4-05-ttl-2.png` | Compass shell | the TTL demo document is present, then count 0 after the wait |
+| `evidence/p4-05-collection-sizes.png` | Compass shell | document and index sizes per collection |
+| `evidence/p4-06-explain-before.png`, `p4-06-explain-after.png` | Compass shell | COLLSCAN examining every document, then IXSCAN examining about as many as returned (events: 80,419 examined before, 20 after) |
+| `evidence/p4-07-1-jsonb-table.png` to `p4-07-7-jsonb-no-validation.png` | pgAdmin | the same applications as JSONB: sequential scan against GIN bitmap scan, array containment, expression index, aggregation equal to MongoDB, and JSONB accepting an invalid document |
+| `evidence/p4-08-compass.png` | Compass | one loan application with embedded applicant, guarantors, documents and device |
+| `evidence/p4-09-indexes.png` | Compass | notifications indexes: TTL, partial and compound |
+| `evidence/p4-10-validation-tab.png` | Compass | the JSON Schema validator on loan applications (error action, strict level) |
+
+### Results worth noting
+
+- **Indexes work as designed.** For a user's recent events, MongoDB examined 80,419 documents without an index and 20 with the compound index.
+- **Both stores hold the same documents.** The average stated income per employment type from the MongoDB aggregation (SALARIED 671,089; SELF_EMPLOYED 774,908; STUDENT 27,995; CIVIL_SERVANT 285,422) is identical to the JSONB aggregation in PostgreSQL.
+- **A GIN index is not always used.** The nested filter and the income range used the indexes (53.6 ms down to 3.1 ms for the nested filter), but the array containment query (`guarantors` with relationship `employer`, about 20 percent of the table) still used a sequential scan, because for a query that matches a fifth of a small table the planner judges a full scan cheaper.
+- **JSONB has no schema validation.** The invalid document with employment type WIZARD and guarantors that is not an array was accepted, whereas MongoDB rejected the same kind of document in step 1.
 
 ## Testing
 
-All scripts were run end to end on a temporary MongoDB 7.0 instance and a temporary PostgreSQL 18 instance during development (validators rejecting bad documents, seed, queries, explain, TTL deletion, and the JSONB comparison). Those runs are not evidence. Run them yourself and capture your own output.
+I ran every script myself against MongoDB Community Server 9.0.4 and PostgreSQL 18.1 on my laptop, and the screenshots above come from those runs. The validators rejected all five invalid documents, the seed loaded all four collections, the TTL document was removed by MongoDB after the wait, and `explain` showed collection scans turning into index scans.
