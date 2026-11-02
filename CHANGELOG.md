@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-02 (session 4, early morning, West Africa Time)
+
+### Portfolio 4 run and committed
+- MongoDB Community Server 9.0.4 installed as a Windows service (a leftover empty install folder had to be replaced). Scripts run in the MongoDB Compass built in shell, the seeder in PowerShell, the JSONB comparison in pgAdmin, document, index and validation views in Compass. The standalone `mongosh` was not installed because of limited disk space.
+- Evidence: 23 screenshots (`p4-01` to `p4-10`). Validators rejected all five invalid documents, the seed loaded 22,178 notifications, 8,410 graph edges, 6,004 loan applications and 80,419 events, the TTL document was deleted, `explain` showed COLLSCAN turning into IXSCAN (80,419 documents examined before, 20 after), and the JSONB aggregation matched the MongoDB aggregation exactly.
+- Noted honestly in the README: a GIN index was not used for an array containment query that matches about 20 percent of the table.
+- Portfolio 4 README rewritten around the real evidence and the tools used.
+
+### Still open before submission
+- Retake `p1-00-version.png` (the current file shows passwords and is not committed).
+- Missing Portfolio 3 pgAdmin screenshots: `p3-12-3-deadlock-error.png` and `p3-13-1-b-waiting.png`.
+- Word document, viva prep, AI declaration confirmation, reflection (the student's own words), references, assessor access.
+
 ## 2026-11-01 (session 3, night, West Africa Time)
 
 ### Evidence collected and committed
