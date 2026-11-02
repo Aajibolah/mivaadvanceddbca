@@ -8,10 +8,11 @@
 - Noted honestly in the README: a GIN index was not used for an array containment query that matches about 20 percent of the table.
 - Portfolio 4 README rewritten around the real evidence and the tools used.
 
-### Still open before submission
-- Retake `p1-00-version.png` (the current file shows passwords and is not committed).
-- Missing Portfolio 3 pgAdmin screenshots: `p3-12-3-deadlock-error.png` and `p3-13-1-b-waiting.png`.
-- Word document, viva prep, AI declaration confirmation, reflection (the student's own words), references, assessor access.
+### Final preparation
+- Repository made public (the course asked for a public repository). A full check of the files and the whole history found no passwords, tokens, personal email addresses, matric number or `.env` file before the change.
+- Root README: progress checklist completed, course material added to the references, AI use declaration finalised (Claude was the only AI tool; the declaration says that the first draft of the report and the reflection was written by Claude and reviewed by the student). Portfolio 3 README lists the real evidence files.
+- Written report for the learning management system prepared as a 3 page Word document (page count checked in Word). It is kept outside the repository because it contains the matric number.
+- Decisions: `p1-00-version.png` (shows passwords) is not committed and is ignored locally; the two missing optional Portfolio 3 screenshots were dropped, and the deadlock error is recorded in the scenario runner log.
 
 ## 2026-11-01 (session 3, night, West Africa Time)
 
